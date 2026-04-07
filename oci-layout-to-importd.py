@@ -13,7 +13,8 @@ from pathlib import Path
 from contextlib import contextmanager
 from typing import Final
 
-UNAME_TO_OCI: Final = {
+
+UNAME_TO_OCI: Final[dict[str, str]] = {
     "x86_64": "amd64",
     "amd64": "amd64",
     "aarch64": "arm64",
