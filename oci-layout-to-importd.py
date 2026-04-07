@@ -58,7 +58,7 @@ def get_platform() -> str:
     return f"{u.system.lower()}/{UNAME_TO_OCI[u.machine]}"
 
 
-def blobs_subdir(layout: Path, digest: str) -> Path:
+def blobpath(layout: Path, digest: str) -> Path:
     algo, _, hex = digest.partition(":")
     return layout / "blobs" / algo / hex
 
@@ -78,9 +78,7 @@ def convert(layout: Path, platform: str, workdir: Path, image: str) -> None:
             m["digest"]
             for e in entries
             if "image.index" in e["mediaType"]
-            for m in json.loads(blobs_subdir(layout, e["digest"]).read_text())[
-                "manifests"
-            ]
+            for m in json.loads(blobpath(layout, e["digest"]).read_text())["manifests"]
             if m["platform"]["os"] == os_ and m["platform"]["architecture"] == arch
         ),
         None,
@@ -93,14 +91,14 @@ def convert(layout: Path, platform: str, workdir: Path, image: str) -> None:
     (workdir / "v2" / image / "blobs").mkdir(parents=True, exist_ok=True)
     latest = workdir / "v2" / image / "manifests" / "latest"
     latest.unlink(missing_ok=True)
-    latest.symlink_to(blobs_subdir(layout, digest))
+    latest.symlink_to(blobpath(layout, digest))
 
-    manifest = json.loads(blobs_subdir(layout, digest).read_text())
+    manifest = json.loads(blobpath(layout, digest).read_text())
     for d in [manifest["config"]["digest"]] + [l["digest"] for l in manifest["layers"]]:
         _, _, hex = d.partition(":")
         blob = workdir / "v2" / image / "blobs" / f"sha256:{hex}"
         blob.unlink(missing_ok=True)
-        blob.symlink_to(blobs_subdir(layout, d))
+        blob.symlink_to(blobpath(layout, d))
 
     return None
 
